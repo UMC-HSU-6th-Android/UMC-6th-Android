@@ -1,9 +1,10 @@
-# UMC-6th-Android
-<b>💻 UMC HSU 6th Android 스터디 깃허브 사용 규칙💻 </b>
+### UMC HSU 6th Android 스터디 깃허브 사용 규칙
 
-<h3>⭐️ Common Rule ⭐️</h3>
 
----
+[🔗 깃허브 사용 규칙 링크 🔗](https://makeus-challenge.notion.site/UMC-6th-Android-GitHub-Rule-78e18d1eee204a11bbd51e0d8f040543?pvs=4)
+
+<br>
+<h2>⭐️ Common Rule ⭐️</h2>
 
 1. 각자 자신의 닉네임으로 된 브랜치에 프로젝트 작업
 
@@ -12,9 +13,7 @@
 3. 코드 리뷰 진행하기
 
 
-<h3> 🌈 Pull Requests </h3>
-
----
+<h2> 🌈 Pull Requests </h2>
 
 Title: N주차미션_닉네임 (ex. 1주차미션_Serious)
 
@@ -25,9 +24,7 @@ Assignees(PR 담당자): 본인
 Labels: mission
 
 
-<h3> ✔ Commit Message Convention </h3>
-
----
+<h2> ✔ Commit Message Convention </h2>
 
 INIT: 초기 프로젝트 생성 시
 
