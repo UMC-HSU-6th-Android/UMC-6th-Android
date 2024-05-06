@@ -10,14 +10,12 @@
 
 2. Main 브랜치로 PR(Pull Request) (스터디 시간 전까지)
    
-3. 코드 리뷰 진행하기
-
 
 <h2> 🌈 Pull Requests </h2>
 
 Title: N주차미션_닉네임 (ex. 1주차미션_Serious)
 
-Reviewers(PR을 리뷰해 줄 팀원): 파트장 + (미정)
+Reviewers(PR을 리뷰해 줄 팀원): 파트장 
 
 Assignees(PR 담당자): 본인
 
