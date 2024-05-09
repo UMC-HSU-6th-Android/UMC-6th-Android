@@ -18,6 +18,7 @@ class SearchFragment: Fragment() {
     ): View? {
         binding = FragmentSearchBinding.inflate(inflater,container,false)
         return binding.root
+
     }
 }
 

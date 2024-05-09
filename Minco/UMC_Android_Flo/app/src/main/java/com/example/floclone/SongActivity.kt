@@ -18,6 +18,7 @@ class SongActivity : AppCompatActivity(){
     lateinit var timer : Timer //타이머 변수 초기화
 
 
+
     private var isRepeatEnabled = false // 반복 재생 활성화 상태 저장
     private var isRandomEnabled = false // 랜덤 재생 활성화 상태 저장
 
@@ -101,7 +102,6 @@ class SongActivity : AppCompatActivity(){
         timer = Timer(song.playTime,song.isPlaying)
         timer.start()
     }
-
     //반복 재생 버튼변경
     private fun setRepeatStatus() {
         isRepeatEnabled = !isRepeatEnabled // 상태 토글
@@ -134,8 +134,10 @@ class SongActivity : AppCompatActivity(){
         } else {
             // 반복 재생 비활성화: 색상 필터 제거
             binding.songRandomIv.clearColorFilter()
+
             //Toast.makeText(applicationContext, "랜덤 재생 비활성화", Toast.LENGTH_SHORT).show()
         }
+
     }
 
     //내부 클래스 외부 변수 접근하기 위함
