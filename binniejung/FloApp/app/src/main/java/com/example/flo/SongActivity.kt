@@ -1,6 +1,7 @@
 package com.example.flo
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -8,16 +9,16 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.flo.databinding.ActivitySongBinding
+import com.google.gson.Gson
 
 class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드 기능을 사용할 수 있게 해주는 것
     lateinit var binding: ActivitySongBinding
     lateinit var song: Song
     lateinit var timer: Timer
+    private var mediaPlayer: MediaPlayer? = null
+    var isRepeatEnabled = 1
+    private var gson : Gson = Gson()
 
-    // 이미지 변경을 위한 boolean 변수 초기화
-    var isPlay:Boolean = false
-    var isRepeat:Int = 1
-    var isShuffle:Boolean = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySongBinding.inflate(layoutInflater)
@@ -28,57 +29,28 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
         initClickListener()
 
 
-
-//        // 플레이 버튼 클릭 이벤트
-//        binding.songPlaybtnIv.setOnClickListener {
-//            if(isPlay==false) {
-//                binding.songPlaybtnIv.setImageResource(R.drawable.btn_miniplay_pause)
-//                isPlay=true
-//            }
-//            else {
-//                binding.songPlaybtnIv.setImageResource(R.drawable.btn_miniplayer_play)
-//                isPlay=false
-//            }
-//        }
-//
-//        // 반복 버튼 클릭 이벤트
-//        val layoutParams = binding.songRepeatbtnIv.layoutParams
-//        val width = 40
-//        val height = 40
-//        binding.songRepeatbtnIv.setOnClickListener {
-//            if(isRepeat == 1) {
-//                binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_one)
-//                Toast.makeText(this, "현재 음악을 반복합니다.", Toast.LENGTH_SHORT).show()
-////                layoutParams.width = width
-////                layoutParams.height = height
-////                binding.songRepeatbtnIv.layoutParams = layoutParams
-//                isRepeat = 2
-//            }
-//            else if(isRepeat == 2){
-//                binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_all)
-//                Toast.makeText(this, "전체음악을 반복합니다.", Toast.LENGTH_SHORT).show()
-//                isRepeat = 3
-//            }
-//            else {
-//                binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_inactive)
-//                Toast.makeText(this, "반복을 사용하지 않습니다.", Toast.LENGTH_SHORT).show()
-//                isRepeat = 1
-//            }
-//        }
-//        // 셔플 버튼 클릭 이벤트
-//        binding.songShufflebtnIv.setOnClickListener {
-//            if(isShuffle == false) {
-//                binding.songShufflebtnIv.setImageResource(R.drawable.nugu_btn_random_active)
-//                Toast.makeText(this, "재생목록을 랜덤으로 재생합니다.", Toast.LENGTH_SHORT).show()
-//                isShuffle = true
-//            }
-//            else {
-//                binding.songShufflebtnIv.setImageResource(R.drawable.nugu_btn_repeat_inactive)
-//                Toast.makeText(this, "재생목록을 순서대로 재생합니다.", Toast.LENGTH_SHORT).show()
-//                isShuffle = false
-//            }
-//        }
     }
+    // 사용자가 포커스를 잃었을 때 음악이 중지
+    // 생명주기를 지정하지 않으면 홈버튼을 눌렀을 때 음악이 중지되지 않음
+    override fun onPause() {
+        super.onPause()
+        setPlayerStatus(false)
+
+        song.second = (song.playTime * binding.songProgressSb.progress) / 100000
+        val sharedPreferences = getSharedPreferences("song", MODE_PRIVATE) // 앱의 SharedPreferences 객체를 가져온다
+        val editor = sharedPreferences.edit()
+        val songToJson = gson.toJson(song)
+        editor.putString("songData", songToJson)
+        Log.d("songData", songToJson.toString())
+        editor.apply()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        timer.interrupt()
+        mediaPlayer?.release() // 미디어 플레이어가 가지고 있던 리소스 해제
+        mediaPlayer = null // 미디어 플레이어 해제
+    }
+
     private fun initClickListener(){
         binding.songDownbtnIv.setOnClickListener {
             finish()
@@ -90,6 +62,9 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
 
         binding.songPauseIv.setOnClickListener {
             setPlayerStatus(false)
+        }
+        binding.songRepeatbtnIv.setOnClickListener {
+            setRepeat()
         }
 
 //        binding.songNextIv.setOnClickListener {
@@ -104,10 +79,7 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
             setLike(song.isLike)
         }
     }
-    override fun onDestroy() {
-        super.onDestroy()
-        timer.interrupt()
-    }
+
     private fun initSong() {
         if(intent.hasExtra("title") && intent.hasExtra("singer")) {
             song = Song(
@@ -116,7 +88,8 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
                 intent.getIntExtra("second", 0),
                 intent.getIntExtra("playTime", 0),
                 intent.getBooleanExtra("isPlaying", false),
-                intent.getBooleanExtra("isLIke", false)
+                intent.getBooleanExtra("isLIke", false),
+                intent.getStringExtra("music")!!
 
             )
         }
@@ -131,15 +104,43 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
             song.isLike = false
         }
     }
+    private fun setRepeat() {
+        if(isRepeatEnabled == 1) {
+            binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_all)
+            Toast.makeText(this, "전체 음악을 반복합니다.", Toast.LENGTH_SHORT).show()
+            isRepeatEnabled = 2
+        } else if(isRepeatEnabled == 2) {
+            binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_one)
+            Toast.makeText(this, "현재 음악을 반복합니다.", Toast.LENGTH_SHORT).show()
+            isRepeatEnabled = 3
+
+        } else {
+            binding.songRepeatbtnIv.setImageResource(R.drawable.nugu_btn_repeat_inactive)
+            Toast.makeText(this, "반복을 사용하지 않습니다.", Toast.LENGTH_SHORT).show()
+            isRepeatEnabled = 1
+        }
+
+    }
 
     private fun setPlayer(song: Song) {
-        binding.songTitleTv.text = intent.getStringExtra("title")!!
-        binding.songSingerTv.text = intent.getStringExtra("singer")!!
-        binding.songStartTimeTv.text = String.format("%02d:%02d", song.second / 60, song.second % 60)
-        binding.songEndTimeTv.text = String.format("%02d:%02d", song.playTime / 60, song.playTime % 60)
-        binding.songProgressSb.progress = (song.second * 1000 / song.playTime)
+        binding.songTitleTv.text=intent.getStringExtra("title")
+        binding.songSingerTv.text=intent.getStringExtra("singer")
+        binding.songStartTimeTv.text=String.format("%02d:%02d",song.second/60,song.second%60)
+        binding.songEndTimeTv.text=String.format("%02d:%02d",song.playTime/60,song.playTime%60)
+        binding.songProgressSb.progress=(song.second * 1000 / song.playTime)
+        //binding.songProgressSb.progress = ((song.second / 1000f) / song.playTime * 100).toInt()
 
+        val music = resources.getIdentifier(song.music, "raw", this.packageName)
+        mediaPlayer = MediaPlayer.create(this, music)
+        // MediaPlayer 재생이 끝났을 때 호출되는 리스너 설정
+        mediaPlayer?.setOnCompletionListener {
+            if (isRepeatEnabled == 2 || isRepeatEnabled == 3) { // 한 곡 반복 재생인 경우
+                mediaPlayer?.seekTo(0) // 재생 위치를 처음으로 되돌림
+                mediaPlayer?.start() // 재생 시작
+            }
+        }
         setPlayerStatus(song.isPlaying)
+
 
     }
     private fun setPlayerStatus(isPlaying : Boolean) {
@@ -149,9 +150,13 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
         if(isPlaying) {
             binding.songMiniplayerIv.visibility = View.GONE
             binding.songPauseIv.visibility = View.VISIBLE
+            mediaPlayer?.start()
         } else {
             binding.songMiniplayerIv.visibility = View.VISIBLE
             binding.songPauseIv.visibility = View.GONE
+            if(mediaPlayer?.isPlaying == true) {
+                mediaPlayer?.pause()
+            }
         }
     }
 
@@ -167,20 +172,22 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
         override fun run() {
             super.run()
             try {
-                while(true) {
-                    if(second >= playTime) {
+                while (true){
+
+                    if(second >= playTime){
                         break
                     }
-                    if(isPlaying) {
+
+                    if(isPlaying){
                         sleep(50)
                         mills += 50
 
-                        runOnUiThread {
-                            binding.songProgressSb.progress = ((mills / playTime)+100).toInt()
+                        runOnUiThread{
+                            binding.songProgressSb.progress = ((mills / playTime)*100).toInt()
                         }
-                        if(mills % 1000 == 0f) {
+                        if(mills % 1000 == 0f){
                             runOnUiThread {
-                                binding.songStartTimeTv.text = String.format("%02d:%02d", second / 60, second % 60)
+                                binding.songStartTimeTv.text = String.format("%02d:%02d",second/60,second%60)
                             }
                             second++
                         }
@@ -193,5 +200,6 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
         }
 
     }
+
 
 }
