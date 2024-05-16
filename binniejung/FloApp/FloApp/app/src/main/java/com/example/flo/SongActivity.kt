@@ -27,8 +27,6 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
         initSong()
         setPlayer(song)
         initClickListener()
-
-
     }
     // 사용자가 포커스를 잃었을 때 음악이 중지
     // 생명주기를 지정하지 않으면 홈버튼을 눌렀을 때 음악이 중지되지 않음
@@ -90,7 +88,6 @@ class SongActivity : AppCompatActivity() { // 액티비티에서 안드로이드
                 intent.getBooleanExtra("isPlaying", false),
                 intent.getBooleanExtra("isLIke", false),
                 intent.getStringExtra("music")!!
-
             )
         }
         startTimer()
